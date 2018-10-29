@@ -15,9 +15,6 @@ public class Recuit {// one method to solve the problem
         float temp = tempInit;
         LinkedList<Integer> actualSol = f.genRoute();
         float actualScore = f.evaluate(actualSol);
-        for (int k = 0; k < actualSol.size(); ++k) {
-            System.out.println(actualSol.get(k));
-        }
         LinkedList<Integer> bestSol = new LinkedList<Integer>();
         bestSol.add(actualSol.getFirst());
         float bestScore = new Float(actualScore);
@@ -33,10 +30,6 @@ public class Recuit {// one method to solve the problem
             if (newScore > bestScore) {
                 bestScore = newScore;
                 bestSol = new LinkedList<Integer>(newSol);
-                System.out.println("Nouvelle solution :" + bestScore);
-                for (int k = 0; k < bestSol.size(); ++k) {
-                    System.out.println(bestSol.get(k));
-                }
                 i = 0;
             }
             ++i;

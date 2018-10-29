@@ -76,4 +76,8 @@ public class Graph {
     public int getValue(int index) {
         return nodes[index];
     }
+
+    public int[] getNodes() {
+        return nodes;
+    }
 }
