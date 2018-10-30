@@ -1,5 +1,7 @@
 package test;
 
+import scpsolver.problems.LPSolution;
+
 /**
  * Hello world!
  */
@@ -15,15 +17,8 @@ public final class Main {
                 new int[] { 0, 1, 1, 3, 1, 11, 2, 10, 9, 10, 8, 11, 10, 11, 10, 4, 4, 7, 11, 6, 6, 5, 8, 9 });
         FonctObj fun = new FonctObj(g);
         Recuit recuit = new Recuit(25);
-        double score = 0;
-        for (int i = 0; i < 10; i++) {
-            Integer[] temp = recuit.solve(g, fun, 0.95f);
-            score += fun.evaluate(temp);
-            for (int elmt : temp) {
-                System.out.println(elmt);
-            }
-            System.out.println("fin sol");
-        }
-        System.out.println(score / 10);
+        Simplex s = new Simplex(g, fun);
+        LPSolution sol = s.solve(1);
+        System.out.println(sol);
     }
 }

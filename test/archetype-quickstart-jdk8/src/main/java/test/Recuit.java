@@ -21,7 +21,7 @@ public class Recuit {// one method to solve the problem
         int i = 0;
         while (i < 100000) {
             double r = rand.nextDouble();
-            LinkedList<Integer> newSol = f.genRouteRdDist(actualSol, temp / tempInit);
+            LinkedList<Integer> newSol = f.genRouteRdDist(actualSol);
             float newScore = f.evaluate(newSol);
             if (r < Math.exp((actualScore - newScore) / temp)) {
                 actualSol = newSol;

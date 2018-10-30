@@ -16,7 +16,7 @@ public class FonctObj {// it is the function utility based on a graph
         Random rand = new Random();
         LinkedList<Integer> list = new LinkedList<Integer>();
         list.add(rand.nextInt(graph.getLength()));
-        int len = rand.nextInt(graph.getLength());// on choisit la longueur du chemin
+        int len = rand.nextInt(graph.getLength());// on choisit la longueur du chemin avec une borne maximale
 
         for (int i = 1; i < len; i++) {
             LinkedList<Integer> node = new LinkedList<Integer>(graph.getNeighbour(list.getLast()));
@@ -25,7 +25,7 @@ public class FonctObj {// it is the function utility based on a graph
         return list;
     }
 
-    public LinkedList<Integer> genRouteRdDist(LinkedList<Integer> list, double ratioExp) {
+    public LinkedList<Integer> genRouteRdDist(LinkedList<Integer> list) {
         float mouvement = graph.getLength() / CONSTANT;
         LinkedList<Integer> route = new LinkedList<>();
         do {
