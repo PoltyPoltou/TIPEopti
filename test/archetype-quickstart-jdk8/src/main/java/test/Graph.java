@@ -2,36 +2,20 @@ package test;
 
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Random;
 
 public class Graph {
     // it is a static graph, can't be changed that much
 
     private int[] nodes;// Store the data of each nodes
-    private Paire[] vertices;// Store the conections of the graph for construction only
     private int[][] neighbourCheck;// matrice to access availibilty of each vertices
     private LinkedList<LinkedList<Integer>> neighbour;// list the available
                                                       // nodes from one
 
     public Graph(int[] nodes, Paire[] vertices) {// warning complexity heavy
         this.nodes = nodes;
-        this.vertices = vertices;
-        neighbour = new LinkedList<LinkedList<Integer>>();
-        neighbourCheck = new int[this.getLength()][this.getLength()];
-        for (int i = 0; i < this.getLength(); i++) {
-            Arrays.fill(neighbourCheck[i], -1);
-        }
-        for (Paire p : this.vertices) {
-            neighbourCheck[p.getA()][p.getB()] = 1;
-            neighbourCheck[p.getB()][p.getA()] = 1;
-        }
-
-        for (int i = 0; i < this.getLength(); i++) {
-            neighbour.add(new LinkedList<Integer>());
-            for (int j = 0; j < this.getLength(); j++) {
-                if (neighbourCheck[i][j] == 1)
-                    neighbour.get(i).add(j);
-            }
-        }
+        this.neighbourCheck = createNeighbourCheck(vertices);
+        this.neighbour = createNeighbour(this.neighbourCheck);
     }
 
     public Graph(int[] nodes, int[] paires) {// paires.length must be even !
@@ -39,26 +23,52 @@ public class Graph {
         for (int i = 0; i < paires.length; i += 2) {
             vertices[i / 2] = new Paire(paires[i], paires[i + 1]);
         }
-
         this.nodes = nodes;
-        this.vertices = vertices;
-        neighbour = new LinkedList<LinkedList<Integer>>();
-        neighbourCheck = new int[this.getLength()][this.getLength()];
-        for (int i = 0; i < this.getLength(); i++) {
-            Arrays.fill(neighbourCheck[i], -1);
-        }
-        for (Paire p : this.vertices) {
-            neighbourCheck[p.getA()][p.getB()] = 1;
-            neighbourCheck[p.getB()][p.getA()] = 1;
-        }
+        this.neighbourCheck = createNeighbourCheck(vertices);
+        this.neighbour = createNeighbour(this.neighbourCheck);
+    }
 
-        for (int i = 0; i < this.getLength(); i++) {
-            neighbour.add(new LinkedList<Integer>());
-            for (int j = 0; j < this.getLength(); j++) {
-                if (neighbourCheck[i][j] == 1)
-                    neighbour.get(i).add(j);
+    public Graph(int size, int valueBound) {// randomly generated with a defined size and maximum value
+        Random rand = new Random();
+        this.nodes = new int[size];
+        for (int i = 0; i < size; i++) {
+            this.nodes[i] = rand.nextInt(valueBound * 2) - valueBound;
+        }
+        this.neighbourCheck = new int[this.getLength()][this.getLength()];
+        for (int i = 0; i < size; i++) {
+            Arrays.fill(this.neighbourCheck[i], -1);
+        }
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (rand.nextBoolean() && i != j)
+                    this.neighbourCheck[i][j] = 1;
             }
         }
+        this.neighbour = createNeighbour(this.neighbourCheck);
+    }
+
+    private LinkedList<LinkedList<Integer>> createNeighbour(int[][] neighbourChk) {// no side effect
+        LinkedList<LinkedList<Integer>> neigh = new LinkedList<LinkedList<Integer>>();
+        for (int i = 0; i < this.getLength(); i++) {
+            neigh.add(new LinkedList<Integer>());
+            for (int j = 0; j < this.getLength(); j++) {
+                if (neighbourChk[i][j] == 1)
+                    neigh.get(i).add(j);
+            }
+        }
+        return neigh;
+    }
+
+    private int[][] createNeighbourCheck(Paire[] vert) {// no side effect
+        int[][] neighbourChk = new int[this.getLength()][this.getLength()];
+        for (int i = 0; i < this.getLength(); i++) {
+            Arrays.fill(neighbourChk[i], -1);
+        }
+        for (Paire p : vert) {
+            neighbourChk[p.getA()][p.getB()] = 1;
+            neighbourChk[p.getB()][p.getA()] = 1;
+        }
+        return neighbourChk;
     }
 
     public boolean isAccessible(int x, int y) {// check connection between x and y, graph can be oriented
@@ -79,5 +89,18 @@ public class Graph {
 
     public int[] getNodes() {
         return nodes;
+    }
+
+    public String toString() {
+        String result = "";
+        for (int i = 0; i < this.nodes.length; i++) {
+            String array = "[";
+            for (int elmt : neighbour.get(i)) {
+                array += elmt + " ,";
+            }
+            array += "]";
+            result = result + getValue(i) + "," + array + "\n";
+        }
+        return result;
     }
 }

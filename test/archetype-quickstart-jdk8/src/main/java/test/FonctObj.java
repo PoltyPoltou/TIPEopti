@@ -30,11 +30,43 @@ public class FonctObj {// it is the function utility based on a graph
         LinkedList<Integer> route = new LinkedList<>();
         do {
             route = genRoute();
-        } while (distanceBetweenRoutes(route, list) > mouvement);// 3 seems to be very efficient
+        } while (FonctObj.distanceBetweenRoutes(route, list) > mouvement);// 3 seems to be very efficient
         return route;
     }
 
-    private int distanceBetweenRoutes(LinkedList<Integer> l1, LinkedList<Integer> l2) {
+    public LinkedList<Integer> genRoute2Opt(LinkedList<Integer> route) {
+        // if it fails to find a route with this method we brute force with random
+        LinkedList<Integer> newRoute = new LinkedList<>(route);
+        for (int i = 0; i < route.size() - 1; i++) {
+            for (int j = i; j < route.size(); j++) {
+                newRoute = swap2Opt(route, i, j);
+                if (isAllowed(newRoute)) {
+                    return newRoute;
+                }
+            }
+        }
+        return genRouteRdDist(route);
+    }
+
+    private boolean isAllowed(LinkedList<Integer> route) {
+        for (int i = 0; i < route.size() - 1; i++) {
+            if (!graph.isAccessible(route.get(i), route.get(i + 1)))
+                return false;
+        }
+        return true;
+    }
+
+    private LinkedList<Integer> swap2Opt(LinkedList<Integer> route, int begin, int end) {
+        LinkedList<Integer> swapList = new LinkedList<>();
+        swapList.addAll(route.subList(0, begin));
+        for (int i = 0; i < end - begin; i++) {
+            swapList.add(begin + i, route.get(end + begin - i));
+        }
+        swapList.addAll(route.subList(end + 1, route.size()));
+        return swapList;
+    }
+
+    static private int distanceBetweenRoutes(LinkedList<Integer> l1, LinkedList<Integer> l2) {
         // levenshtein distance between two routes
         int[][] tab = new int[l1.size()][2];
         int cost = 0;
