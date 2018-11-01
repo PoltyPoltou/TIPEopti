@@ -11,6 +11,7 @@ public class Graph {
     private int[][] neighbourCheck;// matrice to access availibilty of each vertices
     private int[][] neighbourTab;// list the available nodes from one
     private final int RANGECST = 3;// how far can we look to get a new
+    private final int SCALE = 1;// how big can be the routes
 
     public Graph(int[] nodes, Paire[] vertices) {// warning complexity heavy
         this.nodes = nodes;
@@ -55,8 +56,9 @@ public class Graph {
             cursor = 0;
             for (int j = 0; j < res.length; j++) {
                 if (neighbourChk[i][j] == 1)
-                    res[i][cursor++] = 1;
+                    res[i][cursor++] = j;
             }
+            res[i] = Arrays.copyOf(res[i], cursor);
         }
         return res;
     }
@@ -75,8 +77,8 @@ public class Graph {
 
     public int[] genRoute() {// Ici On génère à l'aveugle un nouveau chemin
         Random rand = new Random();
-        int[] list = new int[rand.nextInt(this.getLength())];
-        list[0] = rand.nextInt();
+        int[] list = new int[rand.nextInt(this.getLength() * SCALE) + 1];
+        list[0] = rand.nextInt(this.getLength());
         for (int i = 1; i < list.length; i++) {
             int[] node = Arrays.copyOf(this.getNeighbourTab(list[i - 1]), this.getNeighbourTab(list[i - 1]).length);
             list[i] = node[rand.nextInt(node.length)];
@@ -97,7 +99,7 @@ public class Graph {
         // if it fails to find a route with this method we brute force with random
         int[] newRoute = Arrays.copyOf(route, route.length);
         for (int i = 0; i < route.length - 1; i++) {
-            for (int j = i; j < route.length; j++) {
+            for (int j = i + 1; j < route.length; j++) {
                 newRoute = swap2Opt(route, i, j);
                 if (isAllowed(newRoute)) {
                     return newRoute;
@@ -123,7 +125,7 @@ public class Graph {
             else if (i > end)
                 swapList[i] = route[i];
             else
-                swapList[i] = route[begin + end - i];
+                swapList[i] = route[end - i];
         }
         return swapList;
     }

@@ -20,7 +20,7 @@ public class Recuit {// one method to solve the problem
         bestSol = Arrays.copyOf(actualSol, actualSol.length);
         float bestScore = new Float(actualScore);
         int i = 0;
-        while (i < 100000) {
+        while (i < 1000) {
             double r = rand.nextDouble();
             int[] newSol = g.genRoute2Opt(actualSol);
             float newScore = g.evaluate(newSol);
