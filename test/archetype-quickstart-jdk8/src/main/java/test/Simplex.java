@@ -6,14 +6,10 @@ import scpsolver.problems.LPWizardConstraint;
 
 public class Simplex {
     Graph graph;
-    FonctObj fun;
 
-    public Simplex(Graph g, FonctObj f) {
+    public Simplex(Graph g) {
         this.graph = g;
-        this.fun = f;
     }
-
-    // there are conditions on route, route[i] and route[i+1] must be connected
 
     public LPSolution solve(int multiplier) {
         int maxSize = graph.getLength() * multiplier;
@@ -30,8 +26,8 @@ public class Simplex {
                 for (int k = 0; k < graph.getLength(); k++) {
                     if (graph.isAccessible(i, k))
                         accesConstraint.plus("x" + k + "," + Integer.toString(j - 1)).setAllVariablesBoolean();
-                } // setup for can you access i in j+1 depending of xi,j (there are vertices
-                  // not allowed at all)
+                } // setup for can you access i in j+1 depending of xi,j
+                  // (there are vertices not allowed at all)
             }
 
             if (graph.getValue(i) > 0) {

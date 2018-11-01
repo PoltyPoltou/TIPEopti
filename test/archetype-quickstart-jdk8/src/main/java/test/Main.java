@@ -21,12 +21,11 @@ public final class Main {
         while (true) {
             ++i;
             Graph g = new Graph(30, 10);
-            FonctObj fun = new FonctObj(g);
             Recuit recuit = new Recuit(10000);
-            Simplex s = new Simplex(g, fun);
+            Simplex s = new Simplex(g);
             double simplexRes = s.solve(3).getObjectiveValue();
 
-            Integer[] tab = recuit.solve(g, fun, 1);
+            int[] tab = recuit.solve(g, 0.99999f);
             double recuitRes = recuit.getobjFunctValue();
             mean = (mean * (i - 1) + recuitRes / simplexRes) / i;
         }
