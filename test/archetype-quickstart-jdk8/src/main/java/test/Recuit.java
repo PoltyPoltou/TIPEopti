@@ -20,9 +20,9 @@ public class Recuit {// one method to solve the problem
         bestSol.add(actualSol.getFirst());
         float bestScore = new Float(actualScore);
         int i = 0;
-        while (i < 1000) {
+        while (i < 100000) {
             double r = rand.nextDouble();
-            LinkedList<Integer> newSol = f.genRouteRdDist(actualSol);
+            LinkedList<Integer> newSol = f.genRoute2Opt(actualSol);
             float newScore = f.evaluate(newSol);
             if (r < Math.exp((actualScore - newScore) / temp)) {
                 actualSol = newSol;

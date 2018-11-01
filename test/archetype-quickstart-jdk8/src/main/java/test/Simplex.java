@@ -18,6 +18,7 @@ public class Simplex {
     public LPSolution solve(int multiplier) {
         int maxSize = graph.getLength() * multiplier;
         LPWizard lpw = new LPWizard();
+
         lpw.setMinProblem(false);
         for (int i = 0; i < graph.getLength(); i++) {
             lpw.plus("z" + i, graph.getValue(i));

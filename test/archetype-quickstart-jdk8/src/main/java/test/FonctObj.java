@@ -7,6 +7,8 @@ import java.util.Random;
 public class FonctObj {// it is the function utility based on a graph
     Graph graph;
     final private static int CONSTANT = 3;
+    int rd = 0;
+    int g2opt = 0;
 
     public FonctObj(Graph g) {
         this.graph = g;
@@ -41,10 +43,16 @@ public class FonctObj {// it is the function utility based on a graph
             for (int j = i; j < route.size(); j++) {
                 newRoute = swap2Opt(route, i, j);
                 if (isAllowed(newRoute)) {
+                    if (g2opt % 10000 == 0)
+                        System.out.println("2opt gen " + g2opt);
+                    ++g2opt;
                     return newRoute;
                 }
             }
         }
+        if (rd % 10000 == 0)
+            System.out.println("random gen " + rd);
+        ++rd;
         return genRouteRdDist(route);
     }
 
