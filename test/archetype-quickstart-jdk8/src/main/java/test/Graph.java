@@ -2,6 +2,7 @@ package test;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Random;
 
 public class Graph {
@@ -41,8 +42,10 @@ public class Graph {
         }
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-                if (rand.nextBoolean() && i != j)
+                if (rand.nextBoolean() && i != j) {
                     this.neighbourCheck[i][j] = 1;
+                    this.neighbourCheck[j][i] = 1;
+                }
             }
         }
         this.neighbourTab = createNeighbour(this.neighbourCheck);
@@ -96,17 +99,56 @@ public class Graph {
     }
 
     public int[] genRoute2Opt(int[] route) {
-        // if it fails to find a route with this method we brute force with random
-        int[] newRoute = Arrays.copyOf(route, route.length);
+        // we choose randomly within the possibles solutions, with a chance of
+        // adding or removing first or last node
+        // if no solution random gen is used
+        int[] optRoute = Arrays.copyOf(route, route.length);
+        int[] newRoute = null;// if null stays it is wrong
+        LinkedList<int[]> allowedRoutes = new LinkedList<>();
+        Random rand = new Random();
         for (int i = 0; i < route.length - 1; i++) {
             for (int j = i + 1; j < route.length; j++) {
-                newRoute = swap2Opt(route, i, j);
-                if (isAllowed(newRoute)) {
-                    return newRoute;
+                optRoute = swap2Opt(route, i, j);
+                if (isAllowed(optRoute)) {
+                    int[] node;
+                    switch (rand.nextInt(5)) {
+                    case 0:
+                        newRoute = optRoute;
+                        break;
+                    case 1:
+                        newRoute = Arrays.copyOf(optRoute, optRoute.length + 1);
+                        node = this.getNeighbourTab(optRoute[optRoute.length - 1]);
+                        newRoute[newRoute.length - 1] = node[rand.nextInt(node.length)];
+                        break;
+                    case 2:
+                        newRoute = new int[optRoute.length + 1];
+                        for (int k = 0; k < optRoute.length; k++) {
+                            newRoute[k + 1] = optRoute[k];
+                        }
+                        node = this.getNeighbourTab(optRoute[0]);
+                        newRoute[0] = node[rand.nextInt(node.length)];
+                        break;
+                    case 3:
+                        newRoute = Arrays.copyOf(optRoute, optRoute.length - 1);
+                        break;
+                    case 4:
+                        newRoute = new int[optRoute.length - 1];
+                        for (int k = 0; k < optRoute.length - 1; k++) {
+                            newRoute[k] = optRoute[k + 1];
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+                    allowedRoutes.add(newRoute);
                 }
             }
         }
-        return genRouteRdDist(route);
+        if (allowedRoutes.isEmpty())
+            return genRouteRdDist(route);
+        else {
+            return allowedRoutes.get(rand.nextInt(allowedRoutes.size()));
+        }
     }
 
     private boolean isAllowed(int[] route) {
@@ -125,7 +167,7 @@ public class Graph {
             else if (i > end)
                 swapList[i] = route[i];
             else
-                swapList[i] = route[end - i];
+                swapList[i] = route[end + begin - i];
         }
         return swapList;
     }
