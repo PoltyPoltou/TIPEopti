@@ -12,7 +12,7 @@ public class Graph {
     private int[][] neighbourCheck;// matrice to access availibilty of each vertices
     private int[][] neighbourTab;// list the available nodes from one
     private final int RANGECST = 3;// how far can we look to get a new
-    private final int SCALE = 1;// how big can be the routes
+    private final int SCALE = 1;//> how big can be the routes
 
     public Graph(int[] nodes, Paire[] vertices) {// warning complexity heavy
         this.nodes = nodes;
