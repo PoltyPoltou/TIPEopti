@@ -102,7 +102,7 @@ public class Graph {
         // we choose randomly within the possibles solutions, with a chance of
         // adding or removing first or last node
         // if no solution random gen is used
-        int[] optRoute = Arrays.copyOf(route, route.length);
+        int[] optRoute;
         int[] newRoute = null;// if null stays it is wrong
         LinkedList<int[]> allowedRoutes = new LinkedList<>();
         Random rand = new Random();
@@ -144,11 +144,26 @@ public class Graph {
                 }
             }
         }
-        if (allowedRoutes.isEmpty())
+        if (allowedRoutes.isEmpty()) {
             return genRouteRdDist(route);
-        else {
+        } else
             return allowedRoutes.get(rand.nextInt(allowedRoutes.size()));
+
+    }
+
+    public int[] genRoute2OptGreed(int[] route) {
+        // we choose the best solution within the 2opt swaps
+        int[] optRoute;
+        int[] bestRoute = route;
+        for (int i = 0; i < route.length - 1; i++) {
+            for (int j = i + 1; j < route.length; j++) {
+                optRoute = swap2Opt(route, i, j);
+                if (isAllowed(optRoute) && this.evaluate(optRoute) > this.evaluate(bestRoute)) {
+                    bestRoute = optRoute;
+                }
+            }
         }
+        return bestRoute;
     }
 
     private boolean isAllowed(int[] route) {

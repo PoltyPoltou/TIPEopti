@@ -4,26 +4,31 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class Recuit {// one method to solve the problem
-    float tempInit;
-    float objFunctValue;
+    double tempInit;
+    double objFunctValue;
 
     public Recuit(float temp) {
         this.tempInit = temp;
     }
 
-    public int[] solve2Opt(Graph g, float speedRate) {
+    public int[] solve2Opt(Graph g, double speedRate) {
         Random rand = new Random();
-        float temp = tempInit;
+        double temp = tempInit;
         int[] actualSol = g.genRoute();
-        float actualScore = g.evaluate(actualSol);
+        double actualScore = g.evaluate(actualSol);
         int[] bestSol;
         bestSol = Arrays.copyOf(actualSol, actualSol.length);
-        float bestScore = new Float(actualScore);
+        double bestScore = new Double(actualScore);
         int i = 0;
-        while (i < 1000) {
+        while (i < 100000) {
             double r = rand.nextDouble();
-            int[] newSol = g.genRoute2Opt(actualSol);
-            float newScore = g.evaluate(newSol);
+            int[] newSol;
+            if (i % 1000 == 0) {
+                newSol = g.genRoute();
+                temp = tempInit;
+            } else
+                newSol = g.genRoute2Opt(actualSol);
+            double newScore = g.evaluate(newSol);
             if (r < Math.exp((actualScore - newScore) / temp)) {
                 actualSol = newSol;
                 actualScore = newScore;
@@ -40,19 +45,19 @@ public class Recuit {// one method to solve the problem
         return bestSol;
     }
 
-    public int[] solveRand(Graph g, float speedRate) {
+    public int[] solveRand(Graph g, double speedRate) {
         Random rand = new Random();
-        float temp = tempInit;
+        double temp = tempInit;
         int[] actualSol = g.genRoute();
-        float actualScore = g.evaluate(actualSol);
+        double actualScore = g.evaluate(actualSol);
         int[] bestSol;
         bestSol = Arrays.copyOf(actualSol, actualSol.length);
-        float bestScore = new Float(actualScore);
+        double bestScore = new Double(actualScore);
         int i = 0;
         while (i < 1000) {
             double r = rand.nextDouble();
-            int[] newSol = g.genRouteRdDist(actualSol);
-            float newScore = g.evaluate(newSol);
+            int[] newSol = g.genRoute();
+            double newScore = g.evaluate(newSol);
             if (r < Math.exp((actualScore - newScore) / temp)) {
                 actualSol = newSol;
                 actualScore = newScore;
@@ -69,7 +74,26 @@ public class Recuit {// one method to solve the problem
         return bestSol;
     }
 
-    public float getobjFunctValue() {
+    public int[] solveGreed(Graph g) {
+        int[] route = g.genRoute();
+        int[] actualRoute;
+        int[] bestRoute = route;
+        for (int i = 0; i < 50; i++) {
+            actualRoute = g.genRoute2OptGreed(route);
+            if (!Arrays.equals(actualRoute, route)) {
+                --i;
+                route = actualRoute;
+            } else {
+                if (g.evaluate(bestRoute) < g.evaluate(actualRoute))
+                    bestRoute = actualRoute;
+                route = g.genRoute();
+            }
+        }
+        objFunctValue = g.evaluate(bestRoute);
+        return bestRoute;
+    }
+
+    public double getobjFunctValue() {
         return this.objFunctValue;
     }
 }
