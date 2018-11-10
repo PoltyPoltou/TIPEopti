@@ -1,4 +1,4 @@
-package test;
+package standard;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -26,7 +26,7 @@ public final class Main {
         for (int i = 0; i < 500; i++) {
             Graph g = new Graph(50, 10);
             Recuit recuit = new Recuit(100);
-            Simplex s = new Simplex(g);
+            SimplexLib s = new SimplexLib(g);
 
             begin = Instant.now();
             recuit.solveGreed(g);

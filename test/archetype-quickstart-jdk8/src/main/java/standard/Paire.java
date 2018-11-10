@@ -1,4 +1,4 @@
-package test;
+package standard;
 
 public class Paire {
     private int a;

@@ -1,13 +1,13 @@
-package test;
+package standard;
 
 import scpsolver.problems.LPSolution;
 import scpsolver.problems.LPWizard;
 import scpsolver.problems.LPWizardConstraint;
 
-public class Simplex {
+public class SimplexLib {
     Graph graph;
 
-    public Simplex(Graph g) {
+    public SimplexLib(Graph g) {
         this.graph = g;
     }
 

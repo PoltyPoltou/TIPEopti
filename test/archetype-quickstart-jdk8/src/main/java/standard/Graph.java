@@ -1,4 +1,4 @@
-package test;
+package standard;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -165,7 +165,15 @@ public class Graph {
         }
         return bestRoute;
     }
-
+    private int[] swap2OptBis(LinkedList<Integer> route, int begin, int end) {
+        int[] swapList ;
+        swapList.addAll(route.subList(0, begin));
+        for (int i = 0; i < end - begin; i++) {
+            swapList.add(begin + i, route.get(end + begin - i));
+        }
+        swapList.addAll(route.subList(end + 1, route.size()));
+        return swapList;
+    }
     private boolean isAllowed(int[] route) {
         for (int i = 0; i < route.length - 1; i++) {
             if (!this.isAccessible(route[i], route[i + 1]))
