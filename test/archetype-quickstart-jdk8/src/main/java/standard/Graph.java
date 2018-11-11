@@ -12,7 +12,7 @@ public class Graph {
     private int[][] neighbourCheck;// matrice to access availibilty of each vertices
     private int[][] neighbourTab;// list the available nodes from one
     private final int RANGECST = 3;// how far can we look to get a new
-    private final int SCALE = 1;//> how big can be the routes
+    private final int SCALE = 1;// > how big can be the routes
 
     public Graph(int[] nodes, Paire[] vertices) {// warning complexity heavy
         this.nodes = nodes;
@@ -82,6 +82,17 @@ public class Graph {
         Random rand = new Random();
         int[] list = new int[rand.nextInt(this.getLength() * SCALE) + 1];
         list[0] = rand.nextInt(this.getLength());
+        for (int i = 1; i < list.length; i++) {
+            int[] node = Arrays.copyOf(this.getNeighbourTab(list[i - 1]), this.getNeighbourTab(list[i - 1]).length);
+            list[i] = node[rand.nextInt(node.length)];
+        }
+        return list;
+    }
+
+    public int[] genRoute(int firstNode, int lengthMax) {
+        Random rand = new Random();
+        int[] list = new int[rand.nextInt(lengthMax) + 1];
+        list[0] = firstNode;
         for (int i = 1; i < list.length; i++) {
             int[] node = Arrays.copyOf(this.getNeighbourTab(list[i - 1]), this.getNeighbourTab(list[i - 1]).length);
             list[i] = node[rand.nextInt(node.length)];
@@ -165,15 +176,72 @@ public class Graph {
         }
         return bestRoute;
     }
-    private int[] swap2OptBis(LinkedList<Integer> route, int begin, int end) {
-        int[] swapList ;
-        swapList.addAll(route.subList(0, begin));
-        for (int i = 0; i < end - begin; i++) {
-            swapList.add(begin + i, route.get(end + begin - i));
+
+    public int[] genRoute2OptBis(int[] route) {
+        // if it fails to find a route with this method we brute force with random
+        int[] newRoute;
+        for (int i = 0; i < route.length - 1; i++) {
+            for (int j = i; j < route.length; j++) {
+                newRoute = swap2OptBis(route, i, j);
+                if (isAllowed(newRoute)) {
+                    return newRoute;
+                }
+            }
         }
-        swapList.addAll(route.subList(end + 1, route.size()));
+        return genRouteRdDist(route);
+    }
+
+    public int[] genRandWithBestSubRoute(int[] route) {
+        int[] subRoute = getBestSubRoute(route);
+        int totalLength = subRoute.length;
+        if (totalLength == this.getLength())
+            return route;
+        int[] beforeRoute = genRoute(subRoute[0], this.getLength() - totalLength);
+        totalLength += beforeRoute.length - 1;
+        int[] afterRoute = genRoute(subRoute[subRoute.length - 1], this.getLength() - totalLength);
+        totalLength += afterRoute.length - 1;
+        int[] newRoute = new int[totalLength];
+        for (int i = 0; i < beforeRoute.length - 1; i++) {
+            newRoute[i] = beforeRoute[beforeRoute.length - i - 1];
+        }
+        for (int i = 0; i < subRoute.length; i++) {
+            newRoute[beforeRoute.length - 1 + i] = subRoute[i];
+        }
+        for (int i = 1; i < afterRoute.length; i++) {
+            newRoute[beforeRoute.length + subRoute.length - 2 + i] = afterRoute[i];
+        }
+        return newRoute;
+    }
+
+    private int[] getBestSubRoute(int[] route) {
+        // simply evaluate every subroute and return the one with the best value
+        int[] bestRoute = route;
+        int bestScore = evaluate(bestRoute);
+        for (int i = 0; i < route.length - 1; i++) {
+            for (int j = i + 1; j < route.length; j++) {
+                int[] newRoute = Arrays.copyOfRange(route, i, j);
+                int newScore = evaluate(newRoute);
+                if (newScore > bestScore) {
+                    bestRoute = newRoute;
+                    bestScore = newScore;
+                }
+            }
+        }
+        return bestRoute;
+    }
+
+    static private int[] swap2OptBis(int[] route, int begin, int end) {
+        int[] swapList = new int[route.length];
+        for (int i = 0; i < route.length; i++) {
+            if (i < begin || i > end)
+                swapList[i] = route[i];
+        }
+        for (int i = 0; i <= end - begin; i++) {
+            swapList[begin + i] = route[begin + end - i];
+        }
         return swapList;
     }
+
     private boolean isAllowed(int[] route) {
         for (int i = 0; i < route.length - 1; i++) {
             if (!this.isAccessible(route[i], route[i + 1]))
@@ -182,7 +250,7 @@ public class Graph {
         return true;
     }
 
-    private int[] swap2Opt(int[] route, int begin, int end) {
+    static private int[] swap2Opt(int[] route, int begin, int end) {
         int[] swapList = new int[route.length];
         for (int i = 0; i < route.length; i++) {
             if (i < begin)

@@ -32,7 +32,7 @@
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",
             "stopOnEntry": false,
-            "mainClass": "test.Main",
+            "mainClass": "standard.Main",
             "args": "",
             "projectName": "archetype-quickstart-jdk8"
         },

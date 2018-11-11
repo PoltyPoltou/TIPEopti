@@ -22,24 +22,26 @@ public final class Main {
         double mean = 0;
         double timeMean = 0;
         Instant begin, end;
-        int dur2Opt, durSimplex;
+        double dur2Opt, durSimplex;
         for (int i = 0; i < 500; i++) {
             Graph g = new Graph(50, 10);
             Recuit recuit = new Recuit(100);
             SimplexLib s = new SimplexLib(g);
 
             begin = Instant.now();
-            recuit.solveGreed(g);
+            recuit.solveBestSubRoute(g, 0.95);
             scores[2 * i] = recuit.getobjFunctValue();
             end = Instant.now();
-            dur2Opt = Duration.between(begin, end).getNano();
+            Duration d = Duration.between(begin, end);
+            dur2Opt = d.getNano() * Math.pow(10, -9) + d.getSeconds();
 
             begin = Instant.now();
             scores[2 * i + 1] = s.solve(1).getObjectiveValue();
             end = Instant.now();
-            durSimplex = Duration.between(begin, end).getNano();
+            d = Duration.between(begin, end);
+            durSimplex = d.getNano() * Math.pow(10, -9) + d.getSeconds();
 
-            timeMean = (timeMean * i + (double) dur2Opt / (double) durSimplex) / (i + 1);
+            timeMean = (timeMean * i + dur2Opt / durSimplex) / (i + 1);
             mean = (mean * i + scores[2 * i] / scores[2 * i + 1]) / (i + 1);
         }
     }

@@ -1,0 +1,16 @@
+Implémentation du simplexe : OK
+Implémentation du recuit simulé : OK
+Voisinage utilisé : 
+    Full random -> mauvais quand n augmente
+    Random + distance -> Assez bon mais si n augmente le problème de n grand se pose toujours
+    2opt -> mauvais résultats mais le rapport temps score est respécté 
+    Idée -> on trouve le meilleur sous trajet + random gen avant et après
+            ->les conditions d'arrêts sont différentes en effet le score est strictement croissant
+            et la taille du résultat aussi, on peut donc recommencer une recherche quand on bloque
+            sur l'un de ces critères.
+11/11/18 Grosse erreur dans le recuit simulé,
+je travaille sur de la maximisation donc un signe devait être inversé dans l'exp(deltaScore)
+Ah! ça change beaucoup de choses !
+2opt -> Avec quelques essais, on atteint de façon consistante le 65% score max en 15% du temps pour n = 50
+BestSubGraph -> ratio score est meilleur 90% environ mais le ratio temps est moins bon, après "quelques" optimisations on a 60%
+push 11/11
