@@ -14,16 +14,17 @@ public class Graph {
     private final int RANGECST = 3;// how far can we look to get a new
     private final int SCALE = 1;// > how big can be the routes
 
-    public Graph(int[] nodes, Paire[] vertices) {// warning complexity heavy
+    public Graph(int[] nodes, Paire<Integer, Integer>[] vertices) {// warning complexity heavy
         this.nodes = nodes;
         this.neighbourCheck = createNeighbourCheck(vertices);
         this.neighbourTab = createNeighbour(this.neighbourCheck);
     }
 
     public Graph(int[] nodes, int[] paires) {// paires.length must be even !
-        Paire[] vertices = new Paire[paires.length / 2];
+        @SuppressWarnings("unchecked")
+        Paire<Integer, Integer>[] vertices = new Paire[paires.length / 2];
         for (int i = 0; i < paires.length; i += 2) {
-            vertices[i / 2] = new Paire(paires[i], paires[i + 1]);
+            vertices[i / 2] = new Paire<>(paires[i], paires[i + 1]);
         }
         this.nodes = nodes;
         this.neighbourCheck = createNeighbourCheck(vertices);
@@ -66,60 +67,60 @@ public class Graph {
         return res;
     }
 
-    private int[][] createNeighbourCheck(Paire[] vert) {// no side effect
+    private int[][] createNeighbourCheck(Paire<Integer, Integer>[] vert) {// no side effect
         int[][] neighbourChk = new int[this.getLength()][this.getLength()];
         for (int i = 0; i < this.getLength(); i++) {
             Arrays.fill(neighbourChk[i], -1);
         }
-        for (Paire p : vert) {
+        for (Paire<Integer, Integer> p : vert) {
             neighbourChk[p.getA()][p.getB()] = 1;
             neighbourChk[p.getB()][p.getA()] = 1;
         }
         return neighbourChk;
     }
 
-    public int[] genRoute() {// Ici On génère à l'aveugle un nouveau chemin
+    public Route genRoute() {// Ici On génère à l'aveugle un nouveau chemin
         Random rand = new Random();
-        int[] list = new int[rand.nextInt(this.getLength() * SCALE) + 1];
-        list[0] = rand.nextInt(this.getLength());
-        for (int i = 1; i < list.length; i++) {
-            int[] node = Arrays.copyOf(this.getNeighbourTab(list[i - 1]), this.getNeighbourTab(list[i - 1]).length);
-            list[i] = node[rand.nextInt(node.length)];
+        Route route = new Route(rand.nextInt(this.getLength() * SCALE) + 1, this);
+        route.setStop(0, rand.nextInt(this.getLength()));
+        for (int i = 1; i < route.length; i++) {
+            int[] node = this.getNeighbourTab(route.getStop(i - 1));
+            route.setStop(i, node[rand.nextInt(node.length)]);
         }
-        return list;
-    }
-
-    public int[] genRoute(int firstNode, int lengthMax) {
-        Random rand = new Random();
-        int[] list = new int[rand.nextInt(lengthMax) + 1];
-        list[0] = firstNode;
-        for (int i = 1; i < list.length; i++) {
-            int[] node = Arrays.copyOf(this.getNeighbourTab(list[i - 1]), this.getNeighbourTab(list[i - 1]).length);
-            list[i] = node[rand.nextInt(node.length)];
-        }
-        return list;
-    }
-
-    public int[] genRouteRdDist(int[] list) {
-        float mouvement = this.getLength() / RANGECST;
-        int[] route;
-        do {
-            route = genRoute();
-        } while (Graph.distanceBetweenRoutes(route, list) > mouvement);// 3 seems to be very efficient
         return route;
     }
 
-    public int[] genRoute2Opt(int[] route) {
+    public Route genRoute(int firstNode, int lengthMax) {
+        Random rand = new Random();
+        Route route = new Route(rand.nextInt(lengthMax) + 1, this);
+        route.setStop(0, firstNode);
+        for (int i = 1; i < route.length; i++) {
+            int[] node = this.getNeighbourTab(route.getStop(i - 1));
+            route.setStop(i, node[rand.nextInt(node.length)]);
+        }
+        return route;
+    }
+
+    public Route genRouteRdDist(int[] list) {// not used
+        float mouvement = this.getLength() / RANGECST;
+        Route route;
+        do {
+            route = genRoute();
+        } while (Graph.distanceBetweenRoutes(route.getTab(), list) > mouvement);// 3 seems to be very efficient
+        return route;
+    }
+
+    public Route genRoute2Opt(Route route) {
         // we choose randomly within the possibles solutions, with a chance of
         // adding or removing first or last node
         // if no solution random gen is used
         int[] optRoute;
         int[] newRoute = null;// if null stays it is wrong
-        LinkedList<int[]> allowedRoutes = new LinkedList<>();
+        LinkedList<Route> allowedRoutes = new LinkedList<>();
         Random rand = new Random();
         for (int i = 0; i < route.length - 1; i++) {
             for (int j = i + 1; j < route.length; j++) {
-                optRoute = swap2Opt(route, i, j);
+                optRoute = swap2Opt(route.getTab(), i, j);
                 if (isAllowed(optRoute)) {
                     int[] node;
                     switch (rand.nextInt(5)) {
@@ -151,18 +152,18 @@ public class Graph {
                     default:
                         break;
                     }
-                    allowedRoutes.add(newRoute);
+                    allowedRoutes.add(new Route(newRoute, this));
                 }
             }
         }
         if (allowedRoutes.isEmpty()) {
-            return genRouteRdDist(route);
+            return genRouteRdDist(route.getTab());
         } else
             return allowedRoutes.get(rand.nextInt(allowedRoutes.size()));
 
     }
 
-    public int[] genRoute2OptGreed(int[] route) {
+    public Route genRoute2OptGreed(int[] route) {
         // we choose the best solution within the 2opt swaps
         int[] optRoute;
         int[] bestRoute = route;
@@ -174,21 +175,48 @@ public class Graph {
                 }
             }
         }
-        return bestRoute;
+        return new Route(bestRoute, this);
     }
 
-    public int[] genRoute2OptBis(int[] route) {
-        // if it fails to find a route with this method we brute force with random
-        int[] newRoute;
+    public Route genRandWithBestSubRoute(Route route) {
+        int[] subRoute = getBestSubRoute(route).getTab();
+        int totalLength = subRoute.length;
+        if (totalLength == this.getLength())
+            return route;
+        Route beforeRoute = genRoute(subRoute[0], this.getLength() - totalLength);
+        totalLength += beforeRoute.length - 1;
+        Route afterRoute = genRoute(subRoute[subRoute.length - 1], this.getLength() - totalLength);
+        totalLength += afterRoute.length - 1;
+        Route newRoute = new Route(totalLength, this);
+        for (int i = 0; i < beforeRoute.length - 1; i++) {
+            newRoute.setStop(i, beforeRoute.getStop(beforeRoute.length - i - 1));
+        }
+        for (int i = 0; i < subRoute.length; i++) {
+            newRoute.setStop(beforeRoute.length - 1 + i, subRoute[i]);
+        }
+        for (int i = 1; i < afterRoute.length; i++) {
+            newRoute.setStop(beforeRoute.length + subRoute.length - 2 + i, afterRoute.getStop(i));
+        }
+        return newRoute;
+    }
+
+    private Route getBestSubRoute(Route route) {
+        // simply evaluate every subroute and return the one with the best value
+        int[] bestRoute = route.getTab();
+        int bestScore = evaluate(bestRoute);
+        int newScore = 0;
         for (int i = 0; i < route.length - 1; i++) {
-            for (int j = i; j < route.length; j++) {
-                newRoute = swap2OptBis(route, i, j);
-                if (isAllowed(newRoute)) {
-                    return newRoute;
+            newScore = 0;
+            for (int j = i + 1; j < route.length; j++) {
+                int[] newRoute = Arrays.copyOfRange(route.getTab(), i, j);
+                newScore += this.getValue(route.getTab()[j - 1]);
+                if (newScore > bestScore) {
+                    bestRoute = newRoute;
+                    bestScore = newScore;
                 }
             }
         }
-        return genRouteRdDist(route);
+        return new Route(bestRoute, this);
     }
 
     public int[] genRandWithBestSubRoute(int[] route) {
@@ -196,9 +224,9 @@ public class Graph {
         int totalLength = subRoute.length;
         if (totalLength == this.getLength())
             return route;
-        int[] beforeRoute = genRoute(subRoute[0], this.getLength() - totalLength);
+        int[] beforeRoute = genRoute(subRoute[0], this.getLength() - totalLength).getTab();
         totalLength += beforeRoute.length - 1;
-        int[] afterRoute = genRoute(subRoute[subRoute.length - 1], this.getLength() - totalLength);
+        int[] afterRoute = genRoute(subRoute[subRoute.length - 1], this.getLength() - totalLength).getTab();
         totalLength += afterRoute.length - 1;
         int[] newRoute = new int[totalLength];
         for (int i = 0; i < beforeRoute.length - 1; i++) {
@@ -228,18 +256,6 @@ public class Graph {
             }
         }
         return bestRoute;
-    }
-
-    static private int[] swap2OptBis(int[] route, int begin, int end) {
-        int[] swapList = new int[route.length];
-        for (int i = 0; i < route.length; i++) {
-            if (i < begin || i > end)
-                swapList[i] = route[i];
-        }
-        for (int i = 0; i <= end - begin; i++) {
-            swapList[begin + i] = route[begin + end - i];
-        }
-        return swapList;
     }
 
     private boolean isAllowed(int[] route) {

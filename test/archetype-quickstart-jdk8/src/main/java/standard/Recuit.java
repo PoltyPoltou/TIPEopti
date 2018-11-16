@@ -2,166 +2,106 @@ package standard;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.function.Function;
 
-public class Recuit {// one method to solve the problem
+public class Recuit {
+    // one method to solve the problem
+    // singleton class
     double tempInit;
-    double objFunctValue;
+    double speedRate;
+    private static Recuit singleInstance = null;
 
-    public Recuit(float temp) {
-        this.tempInit = temp;
+    public static Recuit getInstance(double temp) {
+        if (singleInstance == null)
+            singleInstance = new Recuit();
+        singleInstance.setInitialTemp(temp);
+        return singleInstance;
     }
 
-    public int[] solve2Opt(Graph g, double speedRate) {
+    public static Recuit getInstance() {
+        if (singleInstance == null)
+            singleInstance = new Recuit();
+        return singleInstance;
+    }
+
+    public void setInitialTemp(double temperature) {
+        this.tempInit = temperature;
+    }
+
+    public void setSpeedRate(double rate) {
+        this.speedRate = rate;
+    }
+
+    public Route solveMethod(Graph g, Function<Route, Route> fun) {
+        // not safe but still useful
+        // fun must a be a route gen linked to g
         Random rand = new Random();
         double temp = tempInit;
-        int[] actualSol = g.genRoute();
-        double actualScore = g.evaluate(actualSol);
-        int[] bestSol;
-        bestSol = Arrays.copyOf(actualSol, actualSol.length);
-        double bestScore = new Double(actualScore);
+        Route actualSol = g.genRoute();
+        Route bestSol = new Route(Arrays.copyOf(actualSol.getTab(), actualSol.length), g);
         int i = 0;
         int retry = 0;
         while (retry < 100) {
             double r = rand.nextDouble();
-            int[] newSol;
-            if (i == 100 || temp < Math.pow(1, -1)) {
+            Route newSol;
+            if (i == 100 || temp < Math.pow(1, -1) || actualSol.length == g.getLength()) {
                 ++retry;
                 i = 0;
                 newSol = g.genRoute();
                 temp = tempInit;
             } else
-                newSol = g.genRoute2Opt(actualSol);
-            double newScore = g.evaluate(newSol);
-            if (r < Math.exp((newScore - actualScore) / temp)) {
+                newSol = fun.apply(actualSol);
+            if (r < Math.exp((newSol.getScore() - actualSol.getScore()) / temp)) {
                 actualSol = newSol;
-                actualScore = newScore;
             } else
                 ++i;
-            if (newScore > bestScore) {
-                bestScore = newScore;
-                bestSol = Arrays.copyOf(newSol, newSol.length);
+            if (newSol.getScore() > actualSol.getScore()) {
+                bestSol = newSol;
             }
             temp *= speedRate;
         }
-        objFunctValue = bestScore;
         return bestSol;
     }
 
-    public int[] solveRand(Graph g, double speedRate) {
+    public Route solveRand(Graph g) {
         Random rand = new Random();
         double temp = tempInit;
-        int[] actualSol = g.genRoute();
-        double actualScore = g.evaluate(actualSol);
-        int[] bestSol;
-        bestSol = Arrays.copyOf(actualSol, actualSol.length);
-        double bestScore = new Double(actualScore);
+        Route actualSol = g.genRoute();
+        Route bestSol;
+        bestSol = new Route(Arrays.copyOf(actualSol.getTab(), actualSol.length),g);
         int i = 0;
         while (i < 1000) {
             double r = rand.nextDouble();
-            int[] newSol = g.genRoute();
-            double newScore = g.evaluate(newSol);
-            if (r < Math.exp((newScore - actualScore) / temp)) {
+            Route newSol = g.genRoute();
+            if (r < Math.exp((newSol.getScore() - actualSol.getScore()) / temp)) {
                 actualSol = newSol;
-                actualScore = newScore;
             }
-            if (newScore > bestScore) {
-                bestScore = newScore;
-                bestSol = Arrays.copyOf(newSol, newSol.length);
-                i = 0;
-            }
-            ++i;
-            temp *= speedRate;
-        }
-        objFunctValue = bestScore;
-        return bestSol;
-    }
-
-    public int[] solve2OptBis(Graph g, double speedRate) {
-        Random rand = new Random();
-        double temp = tempInit;
-        int[] actualSol = g.genRoute();
-        double actualScore = g.evaluate(actualSol);
-        int[] bestSol;
-        bestSol = Arrays.copyOf(actualSol, actualSol.length);
-        double bestScore = new Double(actualScore);
-        int i = 0;
-        while (i < 100000) {
-            double r = rand.nextDouble();
-            int[] newSol = g.genRoute2OptBis(actualSol);
-            double newScore = g.evaluate(newSol);
-            if (r < Math.exp((newScore - actualScore) / temp)) {
-                actualSol = newSol;
-                actualScore = newScore;
-            }
-            if (newScore > bestScore) {
-                bestScore = newScore;
-                bestSol = Arrays.copyOf(newSol, newSol.length);
-                i = 0;
-            }
-            ++i;
-            temp *= speedRate;
-        }
-        objFunctValue = bestScore;
-        return bestSol;
-    }
-
-    public int[] solveBestSubRoute(Graph g, double speedRate) {
-        Random rand = new Random();
-        double temp = tempInit;
-        int[] actualSol = g.genRoute();
-        double actualScore = g.evaluate(actualSol);
-        int[] bestSol;
-        bestSol = Arrays.copyOf(actualSol, actualSol.length);
-        double bestScore = new Double(actualScore);
-        int i = 0;
-        int retry = 0;
-        while (retry < 100) {
-            double r = rand.nextDouble();
-            int[] newSol;
-            if (i == 100 || temp < Math.pow(1, -1)) {
-                ++retry;
-                i = 0;
-                newSol = g.genRoute();
-                temp = tempInit;
-            } else
-                newSol = g.genRandWithBestSubRoute(actualSol);
-            double newScore = g.evaluate(newSol);
-            if (r < Math.exp((newScore - actualScore) / temp)) {
-                actualSol = newSol;
-                actualScore = newScore;
-            } else
-                ++i;
-            if (newScore > bestScore) {
-                bestScore = newScore;
+            if (newSol.getScore() > bestSol.getScore()) {
                 bestSol = newSol;
-                // System.out.println(newScore + "," + retry);
+                i = 0;
             }
+            ++i;
             temp *= speedRate;
         }
-        objFunctValue = bestScore;
         return bestSol;
     }
 
-    public int[] solveGreed(Graph g) {
-        int[] route = g.genRoute();
-        int[] actualRoute;
-        int[] bestRoute = route;
+    public Route solveGreed(Graph g) {
+        Route route = g.genRoute();
+        Route actualRoute;
+        Route bestRoute = route;
         for (int i = 0; i < 50; i++) {
-            actualRoute = g.genRoute2OptGreed(route);
-            if (!Arrays.equals(actualRoute, route)) {
+            actualRoute = g.genRoute2OptGreed(route.getTab());
+            if (!Arrays.equals(actualRoute.getTab(), route.getTab())) {
                 --i;
                 route = actualRoute;
             } else {
-                if (g.evaluate(bestRoute) < g.evaluate(actualRoute))
+                if (bestRoute.getScore() < actualRoute.getScore())
                     bestRoute = actualRoute;
                 route = g.genRoute();
             }
         }
-        objFunctValue = g.evaluate(bestRoute);
         return bestRoute;
     }
 
-    public double getobjFunctValue() {
-        return this.objFunctValue;
-    }
 }

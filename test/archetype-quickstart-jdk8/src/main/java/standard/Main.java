@@ -25,12 +25,12 @@ public final class Main {
         double dur2Opt, durSimplex;
         for (int i = 0; i < 500; i++) {
             Graph g = new Graph(50, 10);
-            Recuit recuit = new Recuit(100);
+            Recuit recuit = Recuit.getInstance(100);
+            recuit.setSpeedRate(0.95);
             SimplexLib s = new SimplexLib(g);
 
             begin = Instant.now();
-            recuit.solveBestSubRoute(g, 0.95);
-            scores[2 * i] = recuit.getobjFunctValue();
+            scores[2 * i] = recuit.solveMethod(g, g::genRandWithBestSubRoute).getScore();
             end = Instant.now();
             Duration d = Duration.between(begin, end);
             dur2Opt = d.getNano() * Math.pow(10, -9) + d.getSeconds();
@@ -44,5 +44,9 @@ public final class Main {
             timeMean = (timeMean * i + dur2Opt / durSimplex) / (i + 1);
             mean = (mean * i + scores[2 * i] / scores[2 * i + 1]) / (i + 1);
         }
+    }
+
+    public void dataToFile(String filename, Paire<String, int[]> data) {
+
     }
 }
