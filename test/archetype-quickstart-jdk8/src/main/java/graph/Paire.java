@@ -1,4 +1,4 @@
-package standard;
+package graph;
 
 public class Paire {
     private int a;

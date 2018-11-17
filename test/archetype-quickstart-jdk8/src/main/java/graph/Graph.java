@@ -1,4 +1,4 @@
-package standard;
+package graph;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -8,11 +8,15 @@ import java.util.Random;
 public class Graph {
     // it is a static graph, can't be changed that much
 
-    private int[] nodes;// Store the data of each nodes
-    private int[][] neighbourCheck;// matrice to access availibilty of each vertices
-    private int[][] neighbourTab;// list the available nodes from one
-    private final int RANGECST = 3;// how far can we look to get a new
-    private final int SCALE = 1;// > how big can be the routes
+    protected int[] nodes;// Store the data of each nodes
+    protected int[][] neighbourCheck;// matrice to access availibilty of each vertices
+    protected int[][] neighbourTab;// list the available nodes from one
+    protected final int RANGECST = 3;// how far can we look to get a new
+    protected final int SCALE = 1;// > how big can be the routes
+
+    public Graph() {
+
+    }
 
     public Graph(int[] nodes, Paire[] vertices) {// warning complexity heavy
         this.nodes = nodes;
@@ -51,7 +55,7 @@ public class Graph {
         this.neighbourTab = createNeighbour(this.neighbourCheck);
     }
 
-    private int[][] createNeighbour(int[][] neighbourChk) {
+    protected int[][] createNeighbour(int[][] neighbourChk) {
         int[][] res = new int[this.getLength()][this.getLength()];
         int cursor;
         for (int i = 0; i < res.length; i++) {
@@ -66,7 +70,7 @@ public class Graph {
         return res;
     }
 
-    private int[][] createNeighbourCheck(Paire[] vert) {// no side effect
+    protected int[][] createNeighbourCheck(Paire[] vert) {// no side effect
         int[][] neighbourChk = new int[this.getLength()][this.getLength()];
         for (int i = 0; i < this.getLength(); i++) {
             Arrays.fill(neighbourChk[i], -1);
@@ -177,20 +181,6 @@ public class Graph {
         return bestRoute;
     }
 
-    public int[] genRoute2OptBis(int[] route) {
-        // if it fails to find a route with this method we brute force with random
-        int[] newRoute;
-        for (int i = 0; i < route.length - 1; i++) {
-            for (int j = i; j < route.length; j++) {
-                newRoute = swap2OptBis(route, i, j);
-                if (isAllowed(newRoute)) {
-                    return newRoute;
-                }
-            }
-        }
-        return genRouteRdDist(route);
-    }
-
     public int[] genRandWithBestSubRoute(int[] route) {
         int[] subRoute = getBestSubRoute(route);
         int totalLength = subRoute.length;
@@ -213,7 +203,7 @@ public class Graph {
         return newRoute;
     }
 
-    private int[] getBestSubRoute(int[] route) {
+    protected int[] getBestSubRouteA(int[] route) {
         // simply evaluate every subroute and return the one with the best value
         int[] bestRoute = route;
         int bestScore = evaluate(bestRoute);
@@ -230,19 +220,29 @@ public class Graph {
         return bestRoute;
     }
 
-    static private int[] swap2OptBis(int[] route, int begin, int end) {
-        int[] swapList = new int[route.length];
-        for (int i = 0; i < route.length; i++) {
-            if (i < begin || i > end)
-                swapList[i] = route[i];
+    protected int[] getBestSubRoute(int[] route) {
+        // simply evaluate every subroute and return the one with the best value
+        // complexity route.length²
+        int[] bestRoute = route;
+        int bestScore = evaluate(bestRoute), newScore;
+        HashSet<Integer> map = new HashSet<Integer>(); // we must only add nodes score when there not already in the
+                                                       // route
+        for (int i = 0; i < route.length - 1; i++) {
+            newScore = this.getValue(route[i]);
+            map.clear();
+            for (int j = i + 1; j < route.length; j++) {
+                if (map.add(route[j]))
+                    newScore += this.getValue(route[j]);
+                if (newScore > bestScore) {
+                    bestRoute = Arrays.copyOfRange(route, i, j + 1);
+                    bestScore = newScore;
+                }
+            }
         }
-        for (int i = 0; i <= end - begin; i++) {
-            swapList[begin + i] = route[begin + end - i];
-        }
-        return swapList;
+        return bestRoute;
     }
 
-    private boolean isAllowed(int[] route) {
+    protected boolean isAllowed(int[] route) {
         for (int i = 0; i < route.length - 1; i++) {
             if (!this.isAccessible(route[i], route[i + 1]))
                 return false;
@@ -250,7 +250,7 @@ public class Graph {
         return true;
     }
 
-    static private int[] swap2Opt(int[] route, int begin, int end) {
+    static protected int[] swap2Opt(int[] route, int begin, int end) {
         int[] swapList = new int[route.length];
         for (int i = 0; i < route.length; i++) {
             if (i < begin)
@@ -263,7 +263,7 @@ public class Graph {
         return swapList;
     }
 
-    static private int distanceBetweenRoutes(int[] l1, int[] l2) {
+    static protected int distanceBetweenRoutes(int[] l1, int[] l2) {
         // levenshtein distance between two routes
         int[][] tab = new int[l1.length][2];
         int cost = 0;
