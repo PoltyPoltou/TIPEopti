@@ -28,6 +28,10 @@ public class GraphWeigthedArcs extends Graph {
         this.neighbourTab = createNeighbour(this.neighbourCheck);
     }
 
+    public int getArcWeight(int i, int j) {
+        return neighbourCheck[i][j];
+    }
+
     @Override
     public int evaluate(int[] l) {
         // sum of the values of the nodes visited once
@@ -71,4 +75,16 @@ public class GraphWeigthedArcs extends Graph {
         return bestRoute;
     }
 
+    public String toString() {
+        String result = "";
+        for (int i = 0; i < this.nodes.length; i++) {
+            String array = "[";
+            for (int elmt : neighbourTab[i]) {
+                array += elmt + "(" + neighbourCheck[i][elmt] + ")" + ", ";
+            }
+            array = array.substring(0, array.length() - 2) + "]";
+            result = result + getValue(i) + "," + array + "\n";
+        }
+        return result;
+    }
 }

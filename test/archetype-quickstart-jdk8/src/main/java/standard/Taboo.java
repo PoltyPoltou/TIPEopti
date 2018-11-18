@@ -2,7 +2,6 @@ package standard;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.function.Function;
 import graph.*;
 public class Taboo {
     private double result;

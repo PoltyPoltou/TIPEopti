@@ -37,7 +37,7 @@ public class Timer {
     public String toString() {
         return "La fonction " + functName + " a été éxécuté " + iterations + " fois.\n"
                 + "Les résultats sont : score Max " + scoreMax + "\n" + "Score Moyen " + scoreMean + "\n"
-                + "Temps moyen d'éxécution " + time;
+                + "Temps moyen d'éxécution " + time + "\n";
     }
 
 }

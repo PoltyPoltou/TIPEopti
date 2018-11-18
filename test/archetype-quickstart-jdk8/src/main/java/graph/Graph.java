@@ -44,9 +44,9 @@ public class Graph {
         for (int i = 0; i < size; i++) {
             Arrays.fill(this.neighbourCheck[i], -1);
         }
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (rand.nextBoolean() && i != j) {
+        for (int i = 0; i < size - 1; i++) {
+            for (int j = i + 1; j < size; j++) {
+                if (rand.nextBoolean()) {
                     this.neighbourCheck[i][j] = 1;
                     this.neighbourCheck[j][i] = 1;
                 }
@@ -62,7 +62,7 @@ public class Graph {
             Arrays.fill(res[i], -1);
             cursor = 0;
             for (int j = 0; j < res.length; j++) {
-                if (neighbourChk[i][j] == 1)
+                if (neighbourChk[i][j] != -1)
                     res[i][cursor++] = j;
             }
             res[i] = Arrays.copyOf(res[i], cursor);
