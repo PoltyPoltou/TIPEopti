@@ -17,7 +17,7 @@ public class SimplexLib {
 
             for (int j = 1; j < maxSize; j++) {
                 LPWizardConstraint accesConstraint = lpw.addConstraint("access" + i + "," + j, 0, "<=");
-                accesConstraint.plus("x" + i + "," + j, -1).setAllVariablesBoolean();
+                accesConstraint.plus("x" + i + "," + j, -1);
                 for (int k = 0; k < graph.getLength(); k++) {
                     if (graph.isAccessible(i, k))
                         accesConstraint.plus("x" + k + "," + Integer.toString(j - 1)).setAllVariablesBoolean();
@@ -27,9 +27,9 @@ public class SimplexLib {
 
             if (graph.getValue(i) > 0) {
                 LPWizardConstraint maxZConstraint = lpw.addConstraint("maxz" + i, 0, "<=");
-                maxZConstraint.plus("z" + i, -1).setAllVariablesBoolean();
+                maxZConstraint.plus("z" + i, -1);
                 for (int j = 0; j < maxSize; j++) {// zi is the max for j of xi,j
-                    maxZConstraint.plus("x" + i + "," + j).setAllVariablesBoolean();
+                    maxZConstraint.plus("x" + i + "," + j);
                 }
             } else {
                 for (int j = 0; j < maxSize; j++) {
@@ -47,12 +47,10 @@ public class SimplexLib {
             LPWizardConstraint endConstraint = lpw.addConstraint("end" + j, 0, "<=");
             LPWizardConstraint routeConstraint = lpw.addConstraint("one route" + j, 1, ">=");
             for (int i = 0; i < graph.getLength(); i++) {
-                endConstraint.plus("x" + i + "," + j).plus("x" + i + "," + Integer.toString(j + 1), -1)
-                        .setAllVariablesBoolean();
-                routeConstraint.plus("x" + i + "," + j).setAllVariablesBoolean();
+                endConstraint.plus("x" + i + "," + j).plus("x" + i + "," + Integer.toString(j + 1), -1);
+                routeConstraint.plus("x" + i + "," + j);
             }
         }
-        lpw.setAllVariablesInteger();// PLNE
         return lpw.solve();
     }
 
@@ -62,66 +60,59 @@ public class SimplexLib {
 
         lpw.setMinProblem(false);
         for (int i = 0; i < graph.getLength(); i++) {
-            lpw.plus("z" + i, graph.getValue(i));
             // zi stands for does the node i was visited
+            lpw.plus("z" + i, graph.getValue(i));
+            // weight of arcs taken in account
             for (int k = i + 1; k < graph.getLength(); k++) {
                 if (graph.isAccessible(i, k))
                     lpw.plus("arc" + i + "," + k, -graph.getArcWeight(i, k));
-            } // weight of arcs taken in account
+            }
+            // on calcule le nombre de fois qu'on est passé sur un arc
+            for (int k = i + 1; k < graph.getLength(); k++) {
+                LPWizardConstraint arcCountConstraint = lpw.addConstraint("arc count" + i + "," + k, maxSize - 1, ">=");
+                arcCountConstraint.plus("arc" + i + "," + k, -1);
+                for (int j = 0; j < maxSize - 1; j++) {
+                    arcCountConstraint.plus("x" + i + "," + j).plus("x" + k + "," + Integer.toString(j + 1));
+                    arcCountConstraint.plus("x" + k + "," + j).plus("x" + i + "," + Integer.toString(j + 1));
+                }
+                lpw.addConstraint("arc cap" + i + "," + k, 0, "<=").plus("arc" + i + "," + k);
+            }
+            for (int j = 0; j < graph.getLength(); j++) {
+                lpw.setBoolean("x" + i + "," + j);
+            } // PLNE
 
-            for (int k = i + 1; k < graph.getLength(); k++) {
-                LPWizardConstraint arcCountConstraint = lpw.addConstraint("arc count" + i + "," + k, 0, ">=");
-                arcCountConstraint.plus("arc" + i + "," + k, -1).setAllVariablesInteger();
-                for (int j = 0; j < maxSize; j++) {
-                    arcCountConstraint.plus("passage" + i + "," + k + "en" + j).setAllVariablesInteger();
-                }
-            } // on calcule le nombre de fois qu'on est passé sur un arc (somme des passages)
-            for (int k = i + 1; k < graph.getLength(); k++) {
-                for (int j = 0; j < maxSize; j++) {
-                    LPWizardConstraint passageConstraint = lpw.addConstraint("pass" + i + "," + k + "en" + j, 1, ">=");
-                    passageConstraint.plus("passage" + i + "," + k + "en" + j, -1).setAllVariablesBoolean();
-                    passageConstraint.plus("x" + i + "," + j).plus("x" + k + "," + Integer.toString(j + 1));
-                    passageConstraint.plus("x" + k + "," + j).plus("x" + i + "," + Integer.toString(j + 1));
-                    // On prend de i vers k mais aussi de k vers i cela divise le nombre de variable
-                    // par deux
-                }
-            } // on pose plein de variables qui permettent de savoir si on est passé sur une
-              // arrête à l'étape j
+            // setup for can you access i in j+1 depending of xi,j
+            // (there are vertices not allowed at all)
             for (int j = 1; j < maxSize; j++) {
                 LPWizardConstraint accesConstraint = lpw.addConstraint("access" + i + "," + j, 0, "<=");
-                accesConstraint.plus("x" + i + "," + j, -1).setAllVariablesBoolean();
+                accesConstraint.plus("x" + i + "," + j, -1);
                 for (int k = 0; k < graph.getLength(); k++) {
                     if (graph.isAccessible(i, k))
-                        accesConstraint.plus("x" + k + "," + Integer.toString(j - 1)).setAllVariablesBoolean();
-                } // setup for can you access i in j+1 depending of xi,j
-                  // (there are vertices not allowed at all)
+                        accesConstraint.plus("x" + k + "," + Integer.toString(j - 1));
+                }
             }
-
-            LPWizardConstraint maxZConstraint = lpw.addConstraint("maxz" + i, 0, "<=");
-            maxZConstraint.plus("z" + i, -1).setAllVariablesBoolean();
-            for (int j = 0; j < maxSize; j++) {// zi is the max for j of xi,j
-                maxZConstraint.plus("x" + i + "," + j).setAllVariablesBoolean();
+            // zi is the max for j of xi,j
+            // and zi can't be superior to one
+            LPWizardConstraint zDefinition = lpw.addConstraint("maxz" + i, 0, "<=");
+            lpw.addConstraint("zCap" + i, 1, ">=").plus("z" + i);// on borne zi (zi<=1)
+            zDefinition.plus("z" + i, -1);
+            for (int j = 0; j < maxSize; j++) {
+                zDefinition.plus("x" + i + "," + j);
             }
 
         }
+        // you can only go one way
         for (int j = 0; j < maxSize - 1; j++) {
-            // if the route is ended you can't add new points to the route
-            // you can't go in 2 directions id est for j fixed only one xi,j is
-            // equals to one
-            LPWizardConstraint endConstraint = lpw.addConstraint("end" + j, 0, "<=");
-            LPWizardConstraint routeConstraint = lpw.addConstraint("one route" + j, 1, ">=");
+            LPWizardConstraint oneWayConstraint = lpw.addConstraint("one route" + j, 1, ">=");
             for (int i = 0; i < graph.getLength(); i++) {
-                endConstraint.plus("x" + i + "," + j).plus("x" + i + "," + Integer.toString(j + 1), -1)
-                        .setAllVariablesBoolean();
-                routeConstraint.plus("x" + i + "," + j).setAllVariablesBoolean();
+                oneWayConstraint.plus("x" + i + "," + j);
             }
         }
-        lpw.setAllVariablesInteger();// PLNE
         return lpw.solve();
     }
 
     static public String toString(LPSolution sol, Graph g) {
-        String str = "Avec un score de " + sol.getObjectiveValue() + ", le trajet de la solution est :\n";
+        String str = "Avec un score de " /* + sol.getObjectiveValue() */ + ", le trajet de la solution est :\n";
         for (int step = 0; step < g.getLength(); step++) {
             for (int i = 0; i < g.getLength(); i++) {
                 if (sol.getBoolean("x" + i + "," + step))

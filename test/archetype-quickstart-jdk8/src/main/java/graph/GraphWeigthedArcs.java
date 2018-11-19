@@ -18,7 +18,7 @@ public class GraphWeigthedArcs extends Graph {
             Arrays.fill(this.neighbourCheck[i], -1);
         }
         for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+            for (int j = i + 1; j < size; j++) {
                 if (rand.nextBoolean() && i != j) {
                     this.neighbourCheck[i][j] = rand.nextInt(arcBound);
                     this.neighbourCheck[j][i] = this.neighbourCheck[i][j];

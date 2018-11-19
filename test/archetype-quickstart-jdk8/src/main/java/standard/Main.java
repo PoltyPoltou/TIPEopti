@@ -20,7 +20,7 @@ public final class Main {
         // new int[] { 0, 1, 1, 3, 1, 11, 2, 10, 9, 10, 8, 11, 10, 11, 10, 4, 4, 7, 11,
         // 6, 6, 5, 8, 9 });
         Instant begin, end;
-        GraphWeigthedArcs gwa = new GraphWeigthedArcs(20, 10, 10);
+        GraphWeigthedArcs gwa = new GraphWeigthedArcs(35, 10, 10);
         begin = Instant.now();
         LPSolution simplexScore = SimplexLib.solveWithArcs(1, gwa);
         end = Instant.now();
@@ -35,7 +35,7 @@ public final class Main {
         System.out.println(timer2Opt);
         System.out.println(simplexTime);
         System.out.println(gwa);
-        System.out.println(SimplexLib.toString(simplexScore, gwa));
+        System.out.println(simplexScore);
         System.out.println("end");
     }
 
