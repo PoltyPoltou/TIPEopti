@@ -6,6 +6,70 @@ import scpsolver.problems.LPWizardConstraint;
 import graph.*;
 
 public class SimplexLib {
+    private int simplexValue;
+    private Graph graph;
+
+    public SimplexLib(Graph g) {
+        this.graph = g;
+        simplexValue = -1;
+    }
+
+    public int getValue() {
+        return simplexValue;
+    }
+
+    public LPSolution solveNoArcs(int multiplier) {
+        int maxSize = graph.getLength() * multiplier;
+        LPWizard lpw = new LPWizard();
+
+        lpw.setMinProblem(false);
+        for (int i = 0; i < graph.getLength(); i++) {
+            lpw.plus("z" + i, graph.getValue(i));
+            // zi stands for does the node i was visited
+
+            for (int j = 1; j < maxSize; j++) {
+                LPWizardConstraint accesConstraint = lpw.addConstraint("access" + i + "," + j, 0, "<=");
+                accesConstraint.plus("x" + i + "," + j, -1).setAllVariablesBoolean();
+                for (int k = 0; k < graph.getLength(); k++) {
+                    if (graph.isAccessible(i, k))
+                        accesConstraint.plus("x" + k + "," + Integer.toString(j - 1)).setAllVariablesBoolean();
+                } // setup for can you access i in j+1 depending of xi,j
+                  // (there are vertices not allowed at all)
+            }
+
+            if (graph.getValue(i) > 0) {
+                LPWizardConstraint maxZConstraint = lpw.addConstraint("maxz" + i, 0, "<=");
+                maxZConstraint.plus("z" + i, -1).setAllVariablesBoolean();
+                for (int j = 0; j < maxSize; j++) {// zi is the max for j of xi,j
+                    maxZConstraint.plus("x" + i + "," + j).setAllVariablesBoolean();
+                }
+            } else {
+                for (int j = 0; j < maxSize; j++) {
+                    lpw.addConstraint("maxz" + i + "," + j, 0, "<=").plus("z" + i).plus("x" + i + "," + j, -1);
+                }
+            }
+            // depending of the sign of zi in the objective function the constraint is not
+            // the same
+
+        }
+        for (int j = 0; j < maxSize - 1; j++) {
+            // if the route is ended you can't add new points to the route
+            // you can't go in 2 directions idest for j fixed only one xi,j is
+            // equals to one
+            LPWizardConstraint endConstraint = lpw.addConstraint("end" + j, 0, "<=");
+            LPWizardConstraint routeConstraint = lpw.addConstraint("one route" + j, 1, ">=");
+            for (int i = 0; i < graph.getLength(); i++) {
+                endConstraint.plus("x" + i + "," + j).plus("x" + i + "," + Integer.toString(j + 1), -1)
+                        .setAllVariablesBoolean();
+                routeConstraint.plus("x" + i + "," + j).setAllVariablesBoolean();
+            }
+        }
+        lpw.setAllVariablesInteger();// PLNE
+        LPSolution sol = lpw.solve();
+        simplexValue = (int) sol.getObjectiveValue();
+        return sol;
+    }
+
     static public LPSolution solveNoArcs(int multiplier, Graph graph) {
         int maxSize = graph.getLength() * multiplier;
         LPWizard lpw = new LPWizard();
@@ -56,7 +120,7 @@ public class SimplexLib {
         return lpw.solve();
     }
 
-    static public LPSolution solveWithArcs(int multiplier, GraphWeigthedArcs graph) {
+    static public LPSolution solveWithArcs(int multiplier, GraphWeightedArcs graph) {
         int maxSize = graph.getLength() * multiplier;
         LPWizard lpw = new LPWizard();
 

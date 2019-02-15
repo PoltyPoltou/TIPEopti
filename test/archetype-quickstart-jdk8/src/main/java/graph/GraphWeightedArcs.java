@@ -4,10 +4,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-public class GraphWeigthedArcs extends Graph {
+public class GraphWeightedArcs extends Graph {
     // neighbourCheck is the matrice of costs ie mat[i][j] is the cost to get from i
     // to j
-    public GraphWeigthedArcs(int size, int valueBound, int arcBound) {
+    public GraphWeightedArcs(int size, int valueBound, int arcBound) {
         Random rand = new Random();
         this.nodes = new int[size];
         for (int i = 0; i < size; i++) {

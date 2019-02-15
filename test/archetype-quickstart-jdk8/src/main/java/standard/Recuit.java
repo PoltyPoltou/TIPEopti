@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Random;
 import java.util.function.Function;
 import graph.*;
+
 public class Recuit {// one method to solve the problem
     private double tempInit;
     private double objFunctValue;
@@ -32,7 +33,7 @@ public class Recuit {// one method to solve the problem
         this.speedRate = rate;
     }
 
-    public int[] solveGen(Graph g, Function<int[], int[]> generation, int retryCap) {
+    public int[] solveGen(Graph g, RecuitMethod method, int retryCap) {
         Random rand = new Random();
         double temp = tempInit;
         int[] actualSol = g.genRoute();
@@ -50,8 +51,15 @@ public class Recuit {// one method to solve the problem
                 i = 0;
                 newSol = g.genRoute();
                 temp = tempInit;
-            } else
+            } else {
+                Function<int[], int[]> generation;
+                if (method == RecuitMethod.OPT)
+                    generation = g::genRoute2Opt;
+                else
+                    generation = g::genRandWithBestSubRoute;
                 newSol = generation.apply(actualSol);
+            }
+
             double newScore = g.evaluate(newSol);
             if (r < Math.exp((newScore - actualScore) / temp)) {
                 actualSol = newSol;
