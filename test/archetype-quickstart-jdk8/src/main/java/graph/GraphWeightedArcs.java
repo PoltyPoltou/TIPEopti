@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Random;
 
 public class GraphWeightedArcs extends Graph {
+    private static final long serialVersionUID = 1L;
+
     // neighbourCheck is the matrice of costs ie mat[i][j] is the cost to get from i
     // to j
     public GraphWeightedArcs(int size, int valueBound, int arcBound) {

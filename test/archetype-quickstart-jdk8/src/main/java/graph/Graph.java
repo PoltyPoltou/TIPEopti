@@ -1,21 +1,23 @@
 package graph;
 
+import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Random;
 
-public class Graph {
-    // it is a static graph, can't be changed that much
+public class Graph implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     protected int[] nodes;// Store the data of each nodes
     protected int[][] neighbourCheck;// matrice to access availibilty of each vertices
     protected int[][] neighbourTab;// list the available nodes from one
     protected final int RANGECST = 3;// how far can we look to get a new
     protected final int SCALE = 1;// > how big can be the routes
+    protected int bestScore = -1;
 
     public Graph() {
-
     }
 
     public Graph(int[] nodes, Paire[] vertices) {// warning complexity heavy
@@ -82,7 +84,7 @@ public class Graph {
         return neighbourChk;
     }
 
-    public int[] genRoute() {// Ici On génère à l'aveugle un nouveau chemin
+    public int[] genRoute() {// Ici On génère aléatoirement un nouveau chemin
         Random rand = new Random();
         int[] list = new int[rand.nextInt(this.getLength() * SCALE) + 1];
         list[0] = rand.nextInt(this.getLength());
@@ -109,7 +111,7 @@ public class Graph {
         int[] route;
         do {
             route = genRoute();
-        } while (Graph.distanceBetweenRoutes(route, list) > mouvement);// 3 seems to be very efficient
+        } while (Graph.distanceBetweenRoutes(route, list) > mouvement);
         return route;
     }
 
@@ -160,10 +162,79 @@ public class Graph {
             }
         }
         if (allowedRoutes.isEmpty()) {
-            return genRouteRdDist(route);
+            return genRoute(route[0], route.length);
         } else
             return allowedRoutes.get(rand.nextInt(allowedRoutes.size()));
+    }
 
+    public int[] genMixtRoute(int[] route) {
+        int[] optRoute;
+        LinkedList<int[]> allowedRoutes = new LinkedList<>();
+        Random rand = new Random();
+        for (int i = 0; i < route.length - 1; i++) {
+            for (int j = i + 1; j < route.length; j++) {
+                optRoute = swap2Opt(route, i, j);
+                if (isAllowed(optRoute)) {
+                    allowedRoutes.add(optRoute);
+                }
+            }
+        }
+        if (allowedRoutes.isEmpty()) {
+            return genBestSubRoute(route);
+        } else
+            return allowedRoutes.get(rand.nextInt(allowedRoutes.size()));
+    }
+
+    public int[] genMixt2Route(int[] route) {
+        // we choose randomly within the possibles solutions, with a chance of
+        // adding or removing first or last node
+        // if no solution random gen is used
+        int[] optRoute;
+        int[] newRoute = null;// if null stays it is wrong
+        LinkedList<int[]> allowedRoutes = new LinkedList<>();
+        Random rand = new Random();
+        for (int i = 0; i < route.length - 1; i++) {
+            for (int j = i + 1; j < route.length; j++) {
+                optRoute = swap2Opt(route, i, j);
+                if (isAllowed(optRoute)) {
+                    int[] node;
+                    switch (rand.nextInt(5)) {
+                    case 0:
+                        newRoute = optRoute;
+                        break;
+                    case 1:
+                        newRoute = Arrays.copyOf(optRoute, optRoute.length + 1);
+                        node = this.getNeighbourTab(optRoute[optRoute.length - 1]);
+                        newRoute[newRoute.length - 1] = node[rand.nextInt(node.length)];
+                        break;
+                    case 2:
+                        newRoute = new int[optRoute.length + 1];
+                        for (int k = 0; k < optRoute.length; k++) {
+                            newRoute[k + 1] = optRoute[k];
+                        }
+                        node = this.getNeighbourTab(optRoute[0]);
+                        newRoute[0] = node[rand.nextInt(node.length)];
+                        break;
+                    case 3:
+                        newRoute = Arrays.copyOf(optRoute, optRoute.length - 1);
+                        break;
+                    case 4:
+                        newRoute = new int[optRoute.length - 1];
+                        for (int k = 0; k < optRoute.length - 1; k++) {
+                            newRoute[k] = optRoute[k + 1];
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+                    allowedRoutes.add(newRoute);
+                }
+            }
+        }
+        if (allowedRoutes.isEmpty()) {
+            return genBestSubRoute(route);
+        } else
+            return allowedRoutes.get(rand.nextInt(allowedRoutes.size()));
     }
 
     public int[] genRoute2OptGreed(int[] route) {
@@ -181,14 +252,16 @@ public class Graph {
         return bestRoute;
     }
 
-    public int[] genRandWithBestSubRoute(int[] route) {
+    public int[] genBestSubRoute(int[] route) {
         int[] subRoute = getBestSubRoute(route);
         int totalLength = subRoute.length;
+        Random rand = new Random();
         if (totalLength == this.getLength())
             return route;
-        int[] beforeRoute = genRoute(subRoute[0], this.getLength() - totalLength);
+        int maxSize = rand.nextInt(this.getLength() - totalLength) + totalLength + 1;
+        int[] beforeRoute = genRoute(subRoute[0], maxSize - totalLength);
         totalLength += beforeRoute.length - 1;
-        int[] afterRoute = genRoute(subRoute[subRoute.length - 1], this.getLength() - totalLength);
+        int[] afterRoute = genRoute(subRoute[subRoute.length - 1], maxSize - totalLength);
         totalLength += afterRoute.length - 1;
         int[] newRoute = new int[totalLength];
         for (int i = 0; i < beforeRoute.length - 1; i++) {
@@ -203,29 +276,12 @@ public class Graph {
         return newRoute;
     }
 
-    protected int[] getBestSubRouteA(int[] route) {
-        // simply evaluate every subroute and return the one with the best value
-        int[] bestRoute = route;
-        int bestScore = evaluate(bestRoute);
-        for (int i = 0; i < route.length - 1; i++) {
-            for (int j = i + 1; j < route.length; j++) {
-                int[] newRoute = Arrays.copyOfRange(route, i, j);
-                int newScore = evaluate(newRoute);
-                if (newScore > bestScore) {
-                    bestRoute = newRoute;
-                    bestScore = newScore;
-                }
-            }
-        }
-        return bestRoute;
-    }
-
     protected int[] getBestSubRoute(int[] route) {
         // simply evaluate every subroute and return the one with the best value
         // complexity route.length²
         int[] bestRoute = route;
         int bestScore = evaluate(bestRoute), newScore;
-        HashSet<Integer> map = new HashSet<Integer>(); // we must only add nodes score when there not already in the
+        HashSet<Integer> map = new HashSet<Integer>(); // we must only add nodes score when they are not already in the
                                                        // route
         for (int i = 0; i < route.length - 1; i++) {
             newScore = this.getValue(route[i]);
@@ -314,6 +370,14 @@ public class Graph {
         return nodes;
     }
 
+    public void setBestScore(int a) {
+        bestScore = a;
+    }
+
+    public int getBestScore() {
+        return bestScore;
+    }
+
     public String toString() {
         String result = "";
         for (int i = 0; i < this.nodes.length; i++) {
@@ -327,37 +391,3 @@ public class Graph {
         return result;
     }
 }
-/*
- * not working very well :/ public LinkedList<Integer>
- * genRouteNear(LinkedList<Integer> list, double ratioExp) {
- * 
- * LinkedList<Integer> trip = new LinkedList<Integer>(list);
- * ArrayList<LinkedList<Integer>> detourOk = new ArrayList<>(); Random rand =
- * new Random(); int r; if (list.size() == 1) { trip = new LinkedList<>();
- * trip.add(rand.nextInt(graph.getLength())); return trip; } do { r =
- * rand.nextInt(trip.size()); if (r == 0 || r == trip.size() - 1) {
- * LinkedList<Integer> temp; switch (r) { case 0: temp =
- * graph.getNeighbour(trip.get(r + 1)); trip.remove(r); trip.add(r,
- * temp.get(rand.nextInt(temp.size()))); break;
- * 
- * default: temp = graph.getNeighbour(trip.get(r - 1)); trip.remove(r);
- * trip.add(r, temp.get(rand.nextInt(temp.size()))); break; } return trip; }
- * else if (trip.get(r + 1) == trip.get(r - 1)) { trip.remove(r);
- * trip.remove(r); } else if (!graph.isAccessible(trip.get(r + 1), trip.get(r -
- * 1))) { // we take the node before the one // choosen randomly and try to go
- * the // next one of the route trip.remove(r); LinkedList<Integer> start =
- * graph.getNeighbour(trip.get(r - 1)); ArrayDeque<LinkedList<Integer>>
- * listeDetour = new ArrayDeque<LinkedList<Integer>>(); detourOk = new
- * ArrayList<>(); for (int i = 0; i < start.size(); i++) { LinkedList<Integer> l
- * = new LinkedList<>(); l.add(start.get(i)); listeDetour.add(l); } int i = 0;
- * // On explore dans toutes les directions le graphe // pour trouver un nouveau
- * chemin qu'on ajoute à la liste detourOk while (!listeDetour.isEmpty() && i <
- * ratioExp * graph.getLength()) { LinkedList<Integer> elmt =
- * listeDetour.poll(); LinkedList<Integer> neighbour = new
- * LinkedList<>(graph.getNeighbour(elmt.getLast())); if (elmt.size() != 1)
- * neighbour.remove(elmt.get(elmt.size() - 2)); for (int nb : neighbour) {
- * LinkedList<Integer> temp = new LinkedList<>(elmt); if (nb == trip.get(r))
- * detourOk.add(temp); else { temp.add(nb); listeDetour.add(temp); } } ++i; } }
- * } while (detourOk.size() == 0); trip.addAll(r,
- * detourOk.get(rand.nextInt(detourOk.size()))); return trip; }
- */

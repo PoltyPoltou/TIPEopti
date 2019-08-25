@@ -6,18 +6,8 @@ import java.util.function.Function;
 import graph.*;
 
 public class Recuit {// one method to solve the problem
-    private double tempInit;
     private double objFunctValue;
-    private double speedRate;
     private static Recuit singleInstance = null;
-
-    public static Recuit getInstance(double temp, double speed) {
-        if (singleInstance == null)
-            singleInstance = new Recuit();
-        singleInstance.setInitialTemp(temp);
-        singleInstance.setSpeedRate(speed);
-        return singleInstance;
-    }
 
     public static Recuit getInstance() {
         if (singleInstance == null)
@@ -25,15 +15,7 @@ public class Recuit {// one method to solve the problem
         return singleInstance;
     }
 
-    public void setInitialTemp(double temperature) {
-        this.tempInit = temperature;
-    }
-
-    public void setSpeedRate(double rate) {
-        this.speedRate = rate;
-    }
-
-    public int[] solveGen(Graph g, RecuitMethod method, int retryCap) {
+    public int[] solveGen(double tempInit, double speed, Graph g, RecuitMethod method, int retryCap) {
         Random rand = new Random();
         double temp = tempInit;
         int[] actualSol = g.genRoute();
@@ -53,10 +35,23 @@ public class Recuit {// one method to solve the problem
                 temp = tempInit;
             } else {
                 Function<int[], int[]> generation;
-                if (method == RecuitMethod.OPT)
+                switch (method) {
+                case OPT:
                     generation = g::genRoute2Opt;
-                else
-                    generation = g::genRandWithBestSubRoute;
+                    break;
+                case BESTSUBROUTE:
+                    generation = g::genBestSubRoute;
+                    break;
+                case MIXT:
+                    generation = g::genMixtRoute;
+                    break;
+                case MIXT2:
+                    generation = g::genMixt2Route;
+                    break;
+                default:
+                    generation = g::genMixtRoute;
+                    break;
+                }
                 newSol = generation.apply(actualSol);
             }
 
@@ -64,7 +59,64 @@ public class Recuit {// one method to solve the problem
             if (r < Math.exp((newScore - actualScore) / temp)) {
                 actualSol = newSol;
                 actualScore = newScore;
-                temp *= speedRate;
+                temp *= speed;
+            } else
+                ++i;
+            if (newScore > bestScore) {
+                bestScore = newScore;
+                bestSol = Arrays.copyOf(newSol, newSol.length);
+            }
+        }
+        objFunctValue = bestScore;
+        return bestSol;
+    }
+
+    public int[] solveGen(Graph g, RecuitMethod method, int retryCap) {
+        double tempInit = 100, speed = 0.95;
+        Random rand = new Random();
+        double temp = tempInit;
+        int[] actualSol = g.genRoute();
+        double actualScore = g.evaluate(actualSol);
+        int[] bestSol;
+        bestSol = Arrays.copyOf(actualSol, actualSol.length);
+        double bestScore = new Double(actualScore);
+        int i = 0;
+        int retry = 0;
+        while (retry < retryCap) {
+            double r = rand.nextDouble();
+            int[] newSol;
+            if (i == 100 || temp < Math.pow(1, -1) || actualSol.length == g.getLength()) {
+                ++retry;
+                i = 0;
+                newSol = g.genRoute();
+                temp = tempInit;
+            } else {
+                Function<int[], int[]> generation;
+                switch (method) {
+                case OPT:
+                    generation = g::genRoute2Opt;
+                    break;
+                case BESTSUBROUTE:
+                    generation = g::genBestSubRoute;
+                    break;
+                case MIXT:
+                    generation = g::genMixtRoute;
+                    break;
+                case MIXT2:
+                    generation = g::genMixt2Route;
+                    break;
+                default:
+                    generation = g::genMixtRoute;
+                    break;
+                }
+                newSol = generation.apply(actualSol);
+            }
+
+            double newScore = g.evaluate(newSol);
+            if (r < Math.exp((newScore - actualScore) / temp)) {
+                actualSol = newSol;
+                actualScore = newScore;
+                temp *= speed;
             } else
                 ++i;
             if (newScore > bestScore) {
@@ -77,6 +129,7 @@ public class Recuit {// one method to solve the problem
     }
 
     public int[] solveRand(Graph g) {
+        double tempInit = 100, speedRate = 0.95;
         Random rand = new Random();
         double temp = tempInit;
         int[] actualSol = g.genRoute();

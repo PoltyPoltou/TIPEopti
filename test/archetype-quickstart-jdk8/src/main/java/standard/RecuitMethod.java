@@ -1,5 +1,5 @@
 package standard;
 
 public enum RecuitMethod {
-    OPT, BESTSUBROUTE;
+    OPT, BESTSUBROUTE, MIXT, MIXT2;
 }

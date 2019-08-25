@@ -1,3 +1,23 @@
 .vscode
 .eclipse-formatter.xml
 
+bestsubroutetime.csv
+2optDECAY.csv
+2optRETRY.csv
+2optTEMP.csv
+2optmean.csv
+2opttime.csv
+3,10,80,10
+Mixt2DECAY.csv
+Mixt2RETRY.csv
+Mixt2TEMP.csv
+MixtDECAY.csv
+MixtRETRY.csv
+MixtTEMP.csv
+end.csv
+gdataWithScore10_10_100_10.txt
+gwatest.csv
+subrouteDECAY.csv
+subrouteRETRY.csv
+subrouteTEMP.csv
+subroutemean.csv
